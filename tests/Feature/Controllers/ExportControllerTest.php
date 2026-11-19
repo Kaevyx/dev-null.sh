@@ -97,7 +97,7 @@ it('downloads a versioned private JSON file with an explicit profile and empty l
     $data = json_decode($response->streamedContent(), true, flags: JSON_THROW_ON_ERROR);
 
     expect($data)->toBe([
-        'schema_version' => 9,
+        'schema_version' => 10,
         'exported_at' => now()->toIso8601String(),
         'profile' => [
             'github_id' => $user->github_id,
@@ -759,6 +759,7 @@ it('exports only the users guilds without internal paths or identifiers', functi
             'handle' => 'jobs', 'name' => 'Job Board', 'description' => 'Hiring.', 'emoji' => '💼',
             'icon' => route('guild-icon.show', 'jobs'),
             'pinned_commit_id' => $pin->id,
+            'moderator_notifications_enabled' => false,
             'created_at' => now()->toIso8601String(), 'updated_at' => now()->toIso8601String(),
         ])
         ->and($data['guilds'][1]['icon'])->toBeNull()

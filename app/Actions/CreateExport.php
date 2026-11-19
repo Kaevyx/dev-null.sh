@@ -86,7 +86,7 @@ final readonly class CreateExport
     public function handle(User $user): array
     {
         return [
-            'schema_version' => 9,
+            'schema_version' => 10,
             'exported_at' => now()->toIso8601String(),
             'profile' => [
                 'github_id' => $user->github_id,
@@ -144,6 +144,7 @@ final readonly class CreateExport
                 ...$guild->toArray(),
                 'icon' => $guild->icon_path === null ? null : route('guild-icon.show', $guild->handle),
                 'pinned_commit_id' => $guild->pinned_commit_id,
+                'moderator_notifications_enabled' => $guild->moderator_notifications_enabled,
                 'created_at' => $guild->created_at->toIso8601String(),
                 'updated_at' => $guild->updated_at->toIso8601String(),
             ])->all(),
@@ -483,12 +484,13 @@ final readonly class CreateExport
      */
     private function notifications(User $user): Generator
     {
-        /** @var LazyCollection<int, object{type: string, actor: string, organization: string|null, commit_id: string|null, reason: string|null, level: int|string|null, read_at: string|null, created_at: string}> $notifications */
+        /** @var LazyCollection<int, object{type: string, actor: string, organization: string|null, guild: string|null, commit_id: string|null, reason: string|null, level: int|string|null, read_at: string|null, created_at: string}> $notifications */
         $notifications = $user->notifications()
             ->join('profiles as actor_profiles', 'actor_profiles.id', '=', 'notifications.actor_id')
+            ->leftJoin('guilds as notification_guilds', 'notification_guilds.id', '=', 'notifications.guild_id')
             ->leftJoin('profiles as organization_profiles', 'organization_profiles.id', '=', 'notifications.organization_id')
             ->toBase()
-            ->select(['notifications.id', 'notifications.type', 'notifications.commit_id', 'notifications.reason', 'notifications.level', 'notifications.read_at', 'notifications.created_at', 'actor_profiles.handle as actor', 'organization_profiles.handle as organization'])
+            ->select(['notifications.id', 'notifications.type', 'notifications.commit_id', 'notifications.reason', 'notifications.level', 'notifications.read_at', 'notifications.created_at', 'actor_profiles.handle as actor', 'organization_profiles.handle as organization', 'notification_guilds.handle as guild'])
             ->lazyById(500, 'notifications.id', 'id');
 
         foreach ($notifications as $notification) {
@@ -496,6 +498,7 @@ final readonly class CreateExport
 
             yield [
                 'type' => $notification->type,
+                ...$notification->type === NotificationType::GuildPost->value ? ['guild' => $notification->guild] : [],
                 'actor' => $isModeration ? null : $notification->actor,
                 'organization' => $notification->organization,
                 'commit_id' => $notification->commit_id,

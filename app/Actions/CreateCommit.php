@@ -42,6 +42,7 @@ final readonly class CreateCommit
         private CreateQuoteNotifications $createQuoteNotifications,
         private CreateMentionNotifications $createMentionNotifications,
         private CreateFirstCommitNotifications $createFirstCommitNotifications,
+        private CreateGuildPostNotifications $createGuildPostNotifications,
         private CreateCommitImages $createCommitImages,
         private CreateLinkPreview $createLinkPreview,
         private CreateWorldReply $createWorldReply,
@@ -112,6 +113,7 @@ final readonly class CreateCommit
             $this->createReplyNotifications->handle($commit);
             $this->createQuoteNotifications->handle($commit);
             $this->createMentionNotifications->handle($commit);
+            $this->createGuildPostNotifications->handle($commit);
 
             // Only a person's first commit is announced to their followers, never an organization's.
             if (! $organization instanceof Organization) {

@@ -35,6 +35,7 @@ final readonly class UpdateCommitStatuses
         private CreateQuoteNotifications $createQuoteNotifications,
         private CreateMentionNotifications $createMentionNotifications,
         private CreateFirstCommitNotifications $createFirstCommitNotifications,
+        private CreateGuildPostNotifications $createGuildPostNotifications,
         private CreateWorldReply $createWorldReply,
         private UpdateCommitHotScores $updateCommitHotScores,
         private TomQuery $tomQuery,
@@ -120,6 +121,7 @@ final readonly class UpdateCommitStatuses
                 $this->createReplyNotifications->handle(...$commits);
                 $this->createQuoteNotifications->handle(...$commits);
                 $this->createMentionNotifications->handle(...$commits);
+                $this->createGuildPostNotifications->handle(...$commits);
                 $this->createFirstCommitNotifications->handle(...$personal);
 
                 $commits->each(fn (Commit $commit) => $this->createWorldReply->handle($commit));

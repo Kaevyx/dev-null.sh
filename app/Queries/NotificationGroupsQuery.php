@@ -41,6 +41,7 @@ final readonly class NotificationGroupsQuery
                 'commit',
                 'timeout',
                 'organization',
+                'guild',
             ])
             ->latest()->latest('id');
         $perPage = $through instanceof CarbonImmutable
@@ -113,6 +114,7 @@ final readonly class NotificationGroupsQuery
                 'actor.user' => fn (HasOne $query): HasOne => $query
                     ->withExists(['followers as is_followed' => fn (Builder $query): Builder => $query->whereKey($user->id)]),
                 'organization',
+                'guild',
                 'timeout',
             ]);
     }
@@ -152,6 +154,7 @@ final readonly class NotificationGroupsQuery
                 'mentions' => ['mentioned'],
                 'follows' => ['followed'],
                 'moderation' => ['approved', 'rejected', 'timed_out'],
+                'guilds' => ['guild_post'],
                 default => [],
             }, explode(',', $type)))));
 
@@ -183,16 +186,18 @@ final readonly class NotificationGroupsQuery
             ),
             topics AS (
                 SELECT visible.*,
-                    CASE WHEN visible.type = 'starred' THEN 'starred'
+                    CASE WHEN visible.type = 'guild_post' THEN 'guild_post'
+                        WHEN visible.type = 'starred' THEN 'starred'
                         WHEN visible.type = 'replied' THEN 'replied'
                         WHEN visible.type = 'timed_out' THEN 'timed_out'
                         WHEN visible.organization_id IS NOT NULL THEN CONCAT('organization:', visible.organization_id)
                         ELSE 'activity' END AS topic_kind,
-                    CASE WHEN visible.type = 'followed' THEN visible.recipient_id
+                    CASE WHEN visible.type = 'guild_post' THEN visible.guild_id
+                        WHEN visible.type = 'followed' THEN visible.recipient_id
                         WHEN visible.type = 'starred' THEN visible.commit_id
                         WHEN visible.type = 'replied' THEN visible.id
                         ELSE COALESCE(ancestry.id, threads.id, visible.id) END AS topic_id,
-                    CASE WHEN visible.type = 'followed' THEN DATE(visible.created_at) END AS topic_day
+                    CASE WHEN visible.type IN ('followed', 'guild_post') THEN DATE(visible.created_at) END AS topic_day
                 FROM visible LEFT JOIN threads ON threads.notification_id = visible.id
                 LEFT JOIN ancestry ON ancestry.notification_id = visible.id AND ancestry.parent_id IS NULL
             ),

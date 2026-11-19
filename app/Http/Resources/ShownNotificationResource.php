@@ -28,6 +28,9 @@ final class ShownNotificationResource extends JsonResource implements Arrayable
         return [
             ...$notification->toArray(),
             'actor' => ShownStreams::profile($notification->actor),
+            ...$notification->type === NotificationType::GuildPost ? ['guild' => [
+                'handle' => $notification->guild?->handle, 'name' => $notification->guild?->name,
+            ]] : [],
             ...$notification->type === NotificationType::TimedOut && $notification->relationLoaded('timeout') && $notification->timeout instanceof UserTimeout ? [
                 'timeout' => [
                     'reason' => $notification->timeout->reason->label(),

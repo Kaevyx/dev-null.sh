@@ -35,6 +35,9 @@ final class NotificationResource extends JsonResource
             'read_at' => $this->read_at?->toIso8601ZuluString(),
             'created_at' => $this->created_at->toIso8601ZuluString(),
             'actor' => ProfileResource::make($this->actor),
+            ...$this->type === NotificationType::GuildPost ? ['guild' => [
+                'handle' => $this->guild?->handle, 'name' => $this->guild?->name,
+            ]] : [],
             'actors' => ProfileResource::collection($this->whenLoaded('actors')),
             'organization' => $this->organization instanceof Organization ? OrganizationResource::make($this->organization) : null,
             'group_id' => $this->group_id,

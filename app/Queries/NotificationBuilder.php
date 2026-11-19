@@ -48,6 +48,17 @@ final class NotificationBuilder extends Builder
                             ->whereColumn('organization_members.organization_id', 'notifications.organization_id')
                             ->whereColumn('organization_members.user_id', 'notifications.recipient_id')))
                     ->offset(0)))
+            ->orWhere(fn (Builder $query): Builder => $query
+                ->where('type', NotificationType::GuildPost)
+                ->whereHas('guild', fn (Builder $guild): Builder => $guild
+                    ->whereColumn('guilds.user_id', 'notifications.recipient_id')
+                    ->where('moderator_notifications_enabled', true)->offset(0))
+                ->whereHas('commit', fn (CommitBuilder $commit): CommitBuilder => $commit
+                    ->where('status', CommitStatus::Approved)->whereNull('parent_id')
+                    ->whereColumn('commits.guild_id', 'notifications.guild_id')->offset(0))
+                ->whereNotExists(fn (QueryBuilder $preferences): QueryBuilder => $preferences
+                    ->from('guild_preferences')->whereColumn('guild_preferences.guild_id', 'notifications.guild_id')
+                    ->whereColumn('guild_preferences.user_id', 'notifications.recipient_id')->whereNotNull('muted_at')))
             ->orWhereIn('type', [NotificationType::LeveledUp, NotificationType::TimedOut]))
             ->withoutSilencedActors();
     }

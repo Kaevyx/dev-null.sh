@@ -16,6 +16,7 @@ import {
     GuildRemovalButton,
     GuildReportButton,
 } from '@/components/guild-moderation';
+import { GuildNotifications } from '@/components/guild-notifications';
 import {
     GuildMemberCount,
     GuildPreferences,
@@ -32,6 +33,7 @@ export default function Show({
     handle,
     readFrom,
     canModerate,
+    moderatorNotificationsEnabled,
     pinnedCommit,
     commits,
     page,
@@ -40,6 +42,7 @@ export default function Show({
     handle: string;
     readFrom: string | null;
     canModerate: boolean;
+    moderatorNotificationsEnabled: boolean | null;
     pinnedCommit: Commit | null;
     commits: Commit[];
     page: number;
@@ -236,6 +239,12 @@ export default function Show({
                             : `Include #${handle} in any commit to post here.`}
                     </p>
                 </div>
+                {canModerate && moderatorNotificationsEnabled !== null && (
+                    <GuildNotifications
+                        handle={handle}
+                        enabled={moderatorNotificationsEnabled}
+                    />
+                )}
             </header>
             {!guild.is_paused && (
                 <CommitComposer

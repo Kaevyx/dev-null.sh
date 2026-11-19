@@ -53,7 +53,7 @@ final readonly class CreateGuild
                 $guild = Guild::query()->whereKey($guild->id)->lockForUpdate()->firstOrFail();
 
                 if ($guild->user_id === null) {
-                    $guild->update(['user_id' => $user->id]);
+                    $guild->update(['user_id' => $user->id, 'moderator_notifications_enabled' => false]);
                     $this->membership->handle($user, $guild, true);
                 }
             }
