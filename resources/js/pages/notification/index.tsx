@@ -33,6 +33,7 @@ import {
     useState,
 } from 'react';
 import CommitController from '@/actions/App/Http/Controllers/CommitController';
+import GuildController from '@/actions/App/Http/Controllers/GuildController';
 import { index } from '@/actions/App/Http/Controllers/NotificationController';
 import { show as groupShow } from '@/actions/App/Http/Controllers/NotificationGroupController';
 import NotificationReadAtController from '@/actions/App/Http/Controllers/NotificationReadAtController';
@@ -113,6 +114,11 @@ const filterOptions: {
         type: 'follows',
         label: 'Follows',
         empty: 'No followers yet. When someone follows you, it shows up here.',
+    },
+    {
+        type: 'guilds',
+        label: 'Guilds',
+        empty: 'No guild post notifications. Enable them on a guild you moderate to hear about new approved board posts.',
     },
     {
         type: 'moderation',
@@ -731,6 +737,9 @@ function NotificationSkeleton({ hasPrevious }: { hasPrevious: boolean }) {
 }
 
 function groupNoun(notification: NotificationGroup): string {
+    if (notification.type === 'guild_post') {
+        return 'posts';
+    }
     if (notification.type === 'followed') {
         return 'followers';
     }
@@ -1151,7 +1160,9 @@ export function NotificationContent({
             ? notification.actors_count
             : 1;
     const otherActors =
-        notification.type === 'followed' || notification.type === 'starred'
+        notification.type === 'followed' ||
+        notification.type === 'starred' ||
+        notification.type === 'guild_post'
             ? actorsCount - 1
             : 0;
     // Two people are both named; "and N others" is kept for three or more.
@@ -1192,6 +1203,7 @@ export function NotificationContent({
         starred: Star,
         mentioned: AtSign,
         first_commit: GitCommitVertical,
+        guild_post: GitCommitVertical,
         approved: Check,
         rejected: X,
         timed_out: Hourglass,
@@ -1207,17 +1219,19 @@ export function NotificationContent({
         />
     );
     const href =
-        notification.type === 'followed' ||
-        notification.type === 'timed_out' ||
-        notification.type === 'leveled_up' ||
-        (!summary && notification.type === 'starred')
-            ? show(actor)
-            : CommitController.show({
-                  profile: isOwnCommit
-                      ? (notification.organization ?? user)
-                      : actor,
-                  commit: notification.commit,
-              });
+        notification.type === 'guild_post' && summary
+            ? GuildController.show(notification.guild.handle)
+            : notification.type === 'followed' ||
+                notification.type === 'timed_out' ||
+                notification.type === 'leveled_up' ||
+                (!summary && notification.type === 'starred')
+              ? show(actor)
+              : CommitController.show({
+                    profile: isOwnCommit
+                        ? (notification.organization ?? user)
+                        : actor,
+                    commit: notification.commit,
+                });
     const time = (
         <time
             dateTime={notification.created_at}
@@ -1241,6 +1255,10 @@ export function NotificationContent({
             ? `mentioned @${organization.handle}`
             : 'mentioned you',
         first_commit: 'made their first commit',
+        guild_post:
+            notification.type === 'guild_post'
+                ? `posted in #${notification.guild.handle}`
+                : '',
         approved: `${organization ? whose : 'Your'} commit was approved`,
         rejected: `${organization ? whose : 'Your'} commit was rejected`,
         timed_out: 'You were put in timeout',

@@ -36,6 +36,13 @@ export type NotificationGroup = Notification & {
 
 export type Notification =
     | (BaseNotification & {
+          type: 'guild_post';
+          guild: { handle: string; name: string };
+          commit_id: string;
+          subject_id: null;
+          commit: Omit<Commit, 'author'>;
+      })
+    | (BaseNotification & {
           type: 'followed';
           commit_id: null;
           subject_id: null;

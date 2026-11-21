@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
+ * @property-read bool $moderator_notifications_enabled
  * @property-read string $id
  * @property-read string|null $user_id
  * @property-read string|null $pinned_commit_id
@@ -35,6 +36,14 @@ final class Guild extends Model
     use HasFactory;
 
     use HasUuids;
+
+    protected $attributes = ['moderator_notifications_enabled' => false];
+
+    /** @return array<string, string> */
+    public function casts(): array
+    {
+        return ['moderator_notifications_enabled' => 'boolean'];
+    }
 
     /** @return HasMany<Commit, $this> */
     public function commits(): HasMany

@@ -94,6 +94,7 @@ use App\Http\Controllers\Api\UserTranslationLanguageController;
 use App\Http\Controllers\Api\WebSessionController;
 use App\Http\Controllers\Cli\CommitController;
 use App\Http\Controllers\Cli\KeyLookupController;
+use App\Http\Controllers\GuildNotificationController;
 use App\Http\Middleware\AuthenticateSignedRequest;
 use App\Http\Middleware\AuthenticateSshSignature;
 use App\Http\Middleware\PreventPostingInTimeout;
@@ -168,6 +169,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::put('me/terms', [UserTermsController::class, 'update'])->name('api-user-terms.update');
 
         // User Profile: mirrored from GitHub again, as Sync from GitHub does on the web...
+        Route::put('guilds/{guild:handle}/notifications', [GuildNotificationController::class, 'update'])->middleware('throttle:30,1')->name('api-guild-notification.update');
         Route::put('me/github', [UserProfileController::class, 'update'])
             ->middleware('throttle:profile-syncs')
             ->name('api-user-profile.update');

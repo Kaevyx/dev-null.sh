@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
+ * @property-read string|null $guild_id
+ * @property-read Guild|null $guild
  * @property-read string $id
  * @property-read string $recipient_id
  * @property-read string $actor_id
@@ -46,6 +48,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read Collection<int, Profile> $actors
  */
 #[Hidden([
+    'guild_id',
+    'guild',
     'key',
     'group_rank',
     'actor_position',
@@ -67,6 +71,7 @@ final class Notification extends Model
     public function casts(): array
     {
         return [
+            'guild_id' => 'string',
             'id' => 'string',
             'recipient_id' => 'string',
             'actor_id' => 'string',
@@ -95,6 +100,12 @@ final class Notification extends Model
         $rank = $this->type === NotificationType::LeveledUp && $this->level !== null ? UnixRank::forLevel($this->level) : null;
 
         return [...parent::toArray(), 'rank' => $rank?->value, 'rank_description' => $rank?->description()];
+    }
+
+    /** @return BelongsTo<Guild, $this> */
+    public function guild(): BelongsTo
+    {
+        return $this->belongsTo(Guild::class);
     }
 
     /**

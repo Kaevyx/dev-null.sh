@@ -6,6 +6,7 @@ namespace App\Enums;
 
 enum NotificationType: string
 {
+    case GuildPost = 'guild_post';
     case Followed = 'followed';
     case Replied = 'replied';
     case Mentioned = 'mentioned';
