@@ -29,6 +29,7 @@ final readonly class DeleteGuildModerator
                     'github_id' => $moderator->github_id, 'handle' => $guild->handle, 'created_at' => now(),
                 ]);
                 $guild->update(['user_id' => null, 'moderator_notifications_enabled' => false]);
+                event(new UsersUpdated([$moderator->id], UserUpdate::Notifications));
             }
 
             $viewers = DB::table('guild_preferences')->where('guild_id', $guild->id)->pluck('user_id');

@@ -30,6 +30,7 @@ final readonly class CreateGuildPostNotifications
             // Approval callers may hold models with their old status; read the saved state.
             $posts = Commit::query()->whereKey($ids)->where('status', CommitStatus::Approved)->whereNull('parent_id')->get();
             $guilds = Guild::query()->whereKey($posts->pluck('guild_id'))->orderBy('id')->sharedLock()->get();
+            $moderators = User::query()->whereKey($guilds->pluck('user_id')->filter()->unique())->get()->keyBy('id');
             $recipients = [];
             foreach ($posts as $post) {
                 $guild = $guilds->find($post->guild_id);
@@ -37,7 +38,7 @@ final readonly class CreateGuildPostNotifications
                     continue;
                 }
 
-                $recipient = User::query()->find($guild->user_id);
+                $recipient = $moderators->get($guild->user_id);
                 if (! $recipient instanceof User || ! Commit::query()->whereKey($post->id)->visibleTo($recipient)->withoutMutedAuthorsFor($recipient)->exists()
                     || DB::table('guild_preferences')->where('guild_id', $guild->id)->where('user_id', $recipient->id)->whereNotNull('muted_at')->exists()) {
                     continue;
